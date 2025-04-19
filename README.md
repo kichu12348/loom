@@ -24,7 +24,7 @@ right through the editor.
 
 > _"It’s like Tron and VS Code had a baby."_
 
-![screenshot](https://media.tenor.com/yhSDIYWMe2QAAAAi/teagif-cute.gif)
+![screenshot](https://i.pinimg.com/originals/18/1d/03/181d03bbce65febebee0cd3d20eaad10.gif)
 
 ## FAQ(All are Nope💀cuz yk im the one making it)
 
