@@ -1,11 +1,12 @@
-# 🪼 LOOM: The Cyberpunk Goofy Code Editor
+# 🪼 LOOM: Da Code Editor
 
-Welcome to **LOOM** – the only code editor that glows so hard, your desktop might need sunglasses! Powered by Tauri, React, and a healthy disregard for boring UIs.
+Welcome to **LOOM** – the only code editor that glows so hard, your desktop might need sunglasses😎! Powered by Tauri, React, and a healthy disregard for boring UIs.
 
 ## Features
 
 - **Cyberpunk Glow**: Every pixel is neon. Every token is a party.
-- **Window Transparency**: See your desktop, your cat, or your existential dread right through the editor.
+- **Window Transparency**: See your desktop, your cat, or your existential dread
+right through the editor.
 - **Custom Title Bar**: Because rectangles are for spreadsheets.
 - **JellyFish/GlowPunk Themes**: Your code has never looked this electric.
 - **Monaco Editor**: Like VS Code, but with more attitude.
@@ -23,7 +24,7 @@ Welcome to **LOOM** – the only code editor that glows so hard, your desktop mi
 
 > _"It’s like Tron and VS Code had a baby."_
 
-![screenshot](https://media.giphy.com/media/3o7aD2saalBwwftBIY/giphy.gif)
+![screenshot](https://media.tenor.com/yhSDIYWMe2QAAAAi/teagif-cute.gif)
 
 ## FAQ(All are Nope💀cuz yk im the one making it)
 
