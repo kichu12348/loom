@@ -444,7 +444,7 @@ export default function Sidebar({
         width: expanded ? sidebarWidth : 44,
         minWidth: expanded ? minSidebarWidth : 44,
         maxWidth: expanded ? maxSidebarWidth : 44,
-        background: "rgba(10,0,44,0.98)",
+        background: "rgba(10,0,44,0.8)",
         borderRight: "1.5px solid #00fff7",
         boxShadow: "2px 0 16px #00fff744",
         color: "#fff",
@@ -485,22 +485,23 @@ export default function Sidebar({
           borderBottom: "1px solid #00fff7",
           position: "relative",
           zIndex: 2,
-          background: "rgba(10,0,44,0.98)",
+          
         }}
       >
         <div
           style={{
             fontWeight: 300,
             color: "#00fff7",
-            fontSize: 10,
+            fontSize: 15,
             flex: 1,
             overflow: "hidden",
             textOverflow: "ellipsis",
             whiteSpace: "nowrap",
             userSelect: "text",
+            //display: expanded ? "block" : "none",
           }}
         >
-          {currentFolder}
+          ./{currentFolder}
         </div>
         <button
           onClick={() => handleContextAddFileRoot()}
@@ -513,9 +514,10 @@ export default function Sidebar({
             borderRadius: 4,
             padding: "2px 8px",
             cursor: "pointer",
+            display: expanded ? "block" : "none",
           }}
         >
-          +
+          + File
         </button>
         <button
           onClick={() => handleContextAddDirRoot()}
@@ -528,6 +530,7 @@ export default function Sidebar({
             borderRadius: 4,
             padding: "2px 8px",
             cursor: "pointer",
+            display: expanded ? "block" : "none",
           }}
         >
           + Dir

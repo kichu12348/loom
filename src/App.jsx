@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { open, save } from "@tauri-apps/plugin-dialog";
 import { readTextFile, writeTextFile, readDir, mkdir, remove, rename } from "@tauri-apps/plugin-fs";
 import { basename } from "@tauri-apps/api/path";
@@ -9,6 +9,7 @@ import CodeEditor from "./components/CodeEditor";
 import AnimationStyles from "./components/AnimationStyles";
 import Sidebar from "./components/Sidebar";
 import TabsBar from "./components/TabsBar";
+import Terminal from "./components/Terminal";
 
 const languageMap = {
   js: "javascript",
@@ -88,8 +89,43 @@ export default function App() {
   const [tabs, setTabs] = useState([]); // {filePath, name, language, code}
   const [activeTab, setActiveTab] = useState(null); // filePath of active tab
 
+  const [showTerminal, setShowTerminal] = useState(false);
+  const [terminalHeight, setTerminalHeight] = useState(200);
+  
+  // Toggle terminal visibility
+  const toggleTerminal = useCallback(() => {
+    setShowTerminal(prev => !prev);
+  }, []);
+  
+  // Handle terminal resize
+  const handleTerminalResize = useCallback((height) => {
+    setTerminalHeight(height);
+  }, []);
+  
+  // Handle keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // Ctrl+` to toggle terminal
+      if (e.ctrlKey && e.key === '`') {
+        e.preventDefault();
+        toggleTerminal();
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [toggleTerminal]);
+
   function handleEditorChange(value) {
     setCode(value);
+    // Also update the code in the active tab
+    if (activeTab) {
+      setTabs(prev => 
+        prev.map(tab => 
+          tab.filePath === activeTab ? {...tab, code: value} : tab
+        )
+      );
+    }
   }
 
   // async function handleEditorSave(filePath) {
@@ -179,7 +215,7 @@ export default function App() {
   }
 
 
-  async function handleSaveFile() {
+  const handleSaveFile = useCallback(async () => {
     try {
       let path_to_save = filePath;
       if (!path_to_save) {
@@ -188,16 +224,8 @@ export default function App() {
             {
               name: "Code Files",
               extensions: [
-                "js",
-                "jsx",
-                "ts",
-                "tsx",
-                "html",
-                "css",
-                "json",
-                "md",
-                "rs",
-                "py",
+                "js", "jsx", "ts", "tsx", "html", "css", "json", 
+                "md", "rs", "py",
               ],
             },
           ],
@@ -210,11 +238,36 @@ export default function App() {
         const name = await basename(path_to_save);
         setFileName(name);
         console.log("File saved successfully!");
+
+        // Update tab information if this is an active tab
+        if (tabs.some(tab => tab.filePath === path_to_save)) {
+          setTabs(prev => 
+            prev.map(tab => 
+              tab.filePath === path_to_save ? 
+                {...tab, code, name} : tab
+            )
+          );
+        } else if (path_to_save) {
+          // If it's a new file, add it to tabs
+          const language = languageMap[name.split(".").pop()] || "plaintext";
+          setTabs(prev => [...prev, {
+            filePath: path_to_save,
+            name,
+            language,
+            code
+          }]);
+          setActiveTab(path_to_save);
+        }
+        
+        // Refresh file explorer if saving in the current workspace
+        if (currentRoot && path_to_save.startsWith(currentRoot)) {
+          refreshFiles();
+        }
       }
     } catch (err) {
       console.error("Error saving file:", err);
     }
-  }
+  }, [code, filePath, tabs, currentRoot]);
 
   async function handleSaveFileAs() {
     try {
@@ -358,6 +411,8 @@ export default function App() {
         handleSaveFile={handleSaveFile}
         handleSaveFileAs={handleSaveFileAs}
         handleOpenDir={handleOpenDir}
+        toggleTerminal={toggleTerminal}
+        isTerminalVisible={showTerminal}
       />
       {/* Main content: sidebar + (tabs + editor) */}
       <div style={{ flex: 1, display: "flex", flexDirection: "row", minWidth: 0, minHeight: 0 }}>
@@ -405,6 +460,12 @@ export default function App() {
               handlePermSave={handleSaveFile}
             />
           </div>
+          
+          {/* Terminal component */}
+          <Terminal 
+            show={showTerminal} 
+            onResize={handleTerminalResize} 
+          />
         </div>
       </div>
     </div>

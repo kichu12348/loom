@@ -1,11 +1,12 @@
 import { Window } from "@tauri-apps/api/window";
-import { useState, useRef, useEffect, act } from "react";
+import { useState, useRef, useEffect } from "react";
 import WindowButton from "./WindowButton";
 import loom from "../assets/loom.svg";
+import { FaTerminal } from "react-icons/fa";
 
 const appWindow = Window.getCurrent();
 
-function MenuBar({ handleOpenFile, handleSaveFile, handleSaveFileAs,handleOpenDir }) {
+function MenuBar({ handleOpenFile, handleSaveFile, handleSaveFileAs, handleOpenDir, toggleTerminal }) {
   const [activeMenu, setActiveMenu] = useState(null);
   const menuRef = useRef(null);
 
@@ -36,8 +37,9 @@ function MenuBar({ handleOpenFile, handleSaveFile, handleSaveFileAs,handleOpenDi
     },
     { name: "Edit", options: [] },
     { name: "Selection", options: [] },
-    { name: "View", options: [] },
-    { name: "Terminal", options: [] }
+    { name: "View", options: [
+      { label: "Toggle Terminal", action: toggleTerminal }
+    ] },
   ];
 
   return (
@@ -138,6 +140,8 @@ export default function TitleBar({
   handleSaveFile,
   handleSaveFileAs,
   handleOpenDir,
+  toggleTerminal,
+  isTerminalVisible
 }) {
   return (
     <div
@@ -184,26 +188,32 @@ export default function TitleBar({
         handleSaveFile={handleSaveFile}
         handleSaveFileAs={handleSaveFileAs}
         handleOpenDir={handleOpenDir}
+        toggleTerminal={toggleTerminal}
       />
-      {/* Open Dir Button */}
-      {/* <button
-        onClick={handleOpenDir}
+
+      {/* Terminal Toggle Button */}
+      <button
+        onClick={toggleTerminal}
         style={{
+          WebkitAppRegion: "no-drag",
           marginLeft: 24,
-          background: "#181c2f",
+          background: isTerminalVisible ? "#181c2f" : "transparent",
           color: "#00fff7",
           border: "1px solid #00fff7",
           borderRadius: 4,
-          padding: "6px 14px",
-          fontWeight: 600,
+          padding: "5px 10px",
+          display: "flex",
+          alignItems: "center",
+          fontWeight: "normal",
           fontSize: 12,
           cursor: "pointer",
-          boxShadow: "0 0 8px #00fff799",
-          transition: "background 0.15s, color 0.15s",
+          transition: "background 0.15s",
         }}
       >
-        Open Dir
-      </button> */}
+        <FaTerminal size={12} style={{ marginRight: 6 }} />
+        Terminal
+      </button>
+      
       {/* Window Controls */}
       <div
         style={{

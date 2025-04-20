@@ -28,14 +28,14 @@ const defineCyberpunkTheme = (monaco) => {
     const handleCtrlS = (e) => {
       if (e.ctrlKey && e.key === 's') {
         e.preventDefault();
-        handlePermSave(filePath);
+        handlePermSave();
       }
     }
     window.addEventListener('keydown', handleCtrlS);
 
     return () => window.removeEventListener('keydown', handleCtrlS);
     
-  },[]);
+  },[handlePermSave]);
 
 
   return (
