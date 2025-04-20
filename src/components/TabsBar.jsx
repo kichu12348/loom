@@ -25,6 +25,9 @@ const TabsBar = ({ onTabChange, onTabClose,tabs,setTabs,activeIndex,setActiveInd
         overflowX: "auto",
         whiteSpace: "nowrap",
         WebkitOverflowScrolling: "touch",
+        //scroll bar style
+        scrollbarWidth: "thin",
+        scrollbarColor: "rgba(5, 217, 232, 0.15) transparent",
      }}
     >
       {tabs.map((tab, idx) => (

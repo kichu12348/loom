@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import {
   readDir,
   mkdir,
@@ -197,7 +197,7 @@ function FileItem({
         <div>
           {children.map((child) => (
             <FileItem
-              key={child.path}
+              key={JSON.stringify(child)}
               file={child}
               level={level + 1}
               onFileClick={onFileClick}
@@ -230,42 +230,11 @@ export default function Sidebar({
     x: 0,
     y: 0,
     file: null,
-    });
+  });
   const minSidebarWidth = 160;
   const maxSidebarWidth = 420;
   const sidebarRef = useRef();
   // If no directory loaded, prompt to open one
-  if (!currentRoot) {
-    return (
-      <div
-        ref={sidebarRef}
-        style={{
-          width: 220,
-          background: "rgba(10,0,44,0.98)",
-          borderRight: "1.5px solid #00fff7",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          height: "100%",
-        }}
-      >
-        <button
-          onClick={handleOpenDir}
-          style={{
-            fontSize: 14,
-            padding: "8px 16px",
-            background: "#181c2f",
-            color: "#00fff7",
-            border: "1px solid #00fff7",
-            borderRadius: 4,
-            cursor: "pointer",
-          }}
-        >
-          Open Directory
-        </button>
-      </div>
-    );
-  }
 
   useEffect(() => {
     function handleMouseMove(e) {
@@ -326,6 +295,9 @@ export default function Sidebar({
     conf: "ini",
     toml: "toml",
     dockerfile: "dockerfile",
+    jsx: "javascript",
+    tsx: "typescript",
+    vue: "vue",
   };
   const imageExtensions = ["jpg", "jpeg", "png", "gif", "bmp", "webp"];
   const videoExtensions = ["mp4", "avi", "mkv", "mov", "wmv", "flv"];
@@ -433,9 +405,44 @@ export default function Sidebar({
     return () => window.removeEventListener("click", handler);
   }, [contextMenu.visible]);
 
-  const currentFolder =
-    currentRoot.toString().replace(/\\/g, "/").split("/").pop() ||
-    currentRoot.toString().replace(/\\/g, "/");
+  const currentFolder = useMemo(
+    () =>
+      currentRoot?.toString().replace(/\\/g, "/").split("/").pop() ||
+      currentRoot?.toString().replace(/\\/g, "/"),
+    [currentRoot]
+  );
+
+  if (!currentRoot) {
+    return (
+      <div
+        ref={sidebarRef}
+        style={{
+          width: 220,
+          background: "rgba(10,0,44,0.98)",
+          borderRight: "1.5px solid #00fff7",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          height: "100%",
+        }}
+      >
+        <button
+          onClick={handleOpenDir}
+          style={{
+            fontSize: 14,
+            padding: "8px 16px",
+            background: "#181c2f",
+            color: "#00fff7",
+            border: "1px solid #00fff7",
+            borderRadius: 4,
+            cursor: "pointer",
+          }}
+        >
+          Open Directory
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -459,22 +466,7 @@ export default function Sidebar({
         paddingVertical: 8,
         userSelect: isResizing.current ? "none" : undefined,
         scrollbarWidth: "thin",
-        scrollbarColor: "#00fff7 transparent",
-        "&::-webkit-scrollbar": {
-          width: 8,
-          background: "transparent",
-        },
-        "&::-webkit-scrollbar-thumb": {
-          background: "#003cff",
-          borderRadius: 4,
-        },
-        "&::-webkit-scrollbar-thumb:hover": {
-          background: "#0400ff",
-          opacity: 0.8,
-        },
-        "&::-webkit-scrollbar-track": {
-          background: "transparent",
-        },
+        scrollbarColor: "rgba(5, 217, 232, 0.15) transparent",
       }}
     >
       <div
@@ -485,7 +477,6 @@ export default function Sidebar({
           borderBottom: "1px solid #00fff7",
           position: "relative",
           zIndex: 2,
-          
         }}
       >
         <div

@@ -42,6 +42,8 @@ const languageMap = {
   conf: "ini",
   toml: "toml",
   dockerfile: "dockerfile",
+  jsx: "javascript",
+  tsx: "typescript",
 };
 
 
@@ -77,6 +79,8 @@ export default function App() {
   const [isImageOrVideo, setIsImageOrVideo] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
   const editorContainerRef = useRef(null);
+
+  // window.localStorage.removeItem('lastOpenedDir'); // Remove this line if you want to keep the last opened directory
 
   const [currentRoot, setCurrentRoot] = useState(() => {
     const saved = window.localStorage.getItem('lastOpenedDir');
@@ -238,8 +242,6 @@ export default function App() {
         setFilePath(path_to_save);
         const name = await basename(path_to_save);
         setFileName(name);
-        console.log("File saved successfully!");
-
         // Update tab information if this is an active tab
         if (tabs.some(tab => tab.filePath === path_to_save)) {
           setTabs(prev => 
@@ -311,6 +313,14 @@ export default function App() {
       setCurrentRoot(dir);
       setFiles([]); // Clear previous files
       setRefreshKey((k) => k + 1);
+      setActiveIndex(0);
+      setTabs([]); // Clear previous tabs
+      setCode(null);
+      setFilePath(null);
+      setFileName("Untitled");
+      setCurrentLanguage("javascript");
+      setActiveTab(null);
+      setIsImageOrVideo(null);
       window.localStorage.setItem('lastOpenedDir', dir);
     }
   }
