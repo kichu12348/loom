@@ -31,7 +31,19 @@
     "fs": {
       "requireLiteralLeadingDot": false
     },
-    "dialog": null
+    "dialog": null,
+    "updater":{
+
+      "active": true,
+      "endpoints": [
+        "https://api.github.com/repos/kichu12348/loom/releases/latest",
+        "https://api.github.com/repos/kichu12348/loom/releases/download/v0.1.0/updates.json"
+      ],
+      "windows":{
+        "installMode":"passive"
+      },
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEU1QzBFNjEwNzEwQ0EyMzMKUldRem9neHhFT2JBNVI4Z2FhMGhENTNBc3lReFdzcUo4emk0SlcrZU92YTlZT090MnVWRFVRa0sK"
+    }
   },
   "bundle": {
     "active": true,
@@ -42,6 +54,7 @@
       "icons/128x128@2x.png",
       "icons/icon.icns",
       "icons/icon.ico"
-    ]
+    ],
+    "createUpdaterArtifacts": true
   }
 }

@@ -12,6 +12,8 @@ dist
 dist-ssr
 *.local
 
+~\.tauri
+
 target
 
 # Editor directories and files
@@ -24,3 +26,5 @@ target
 *.njsproj
 *.sln
 *.sw?
+~/.tauri/myapp.key
+~/.tauri/myapp.key.pub
