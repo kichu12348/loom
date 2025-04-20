@@ -137,7 +137,6 @@ export default function Terminal({ show, onResize, onClose }) {
           color: "#e0e0ff",
           whiteSpace: "pre-wrap",
           wordBreak: "break-word",
-          overflow: "auto",
           // scrollbar styles
           scrollbarWidth: "thin",
           scrollbarColor: "#00fff7",
