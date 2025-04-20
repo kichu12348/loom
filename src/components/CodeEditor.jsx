@@ -1,7 +1,8 @@
 import Editor from "@monaco-editor/react";
 import JellyFish from './themes/JellyFish.json';
+import { useEffect } from "react";
 
-function CodeEditor({ filePath, fileName, code, handleEditorChange }) {
+function CodeEditor({ filePath, fileName, code, handleEditorChange, currentLanguage,isImageOrVideo,handlePermSave }) {
 
 const defineCyberpunkTheme = (monaco) => {
       monaco.editor.defineTheme('cyberpunk-theme', {
@@ -11,6 +12,32 @@ const defineCyberpunkTheme = (monaco) => {
       });
   };
 
+
+  // if(isImageOrVideo) {
+  //   const {image, video} = isImageOrVideo;
+  //   return (
+  //     <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100%", width: "100%" }}>
+  //       {image && <img src={filePath} alt="Image" style={{ maxWidth: "100%", maxHeight: "100%" }} />}
+  //       {video && <video src={filePath} controls style={{ maxWidth: "100%", maxHeight: "100%" }} />}
+  //     </div>
+  //   );
+  // };
+
+
+  useEffect(()=>{
+    const handleCtrlS = (e) => {
+      if (e.ctrlKey && e.key === 's') {
+        e.preventDefault();
+        handlePermSave(filePath);
+      }
+    }
+    window.addEventListener('keydown', handleCtrlS);
+
+    return () => window.removeEventListener('keydown', handleCtrlS);
+    
+  },[]);
+
+
   return (
     <Editor
       height="100%"
@@ -18,7 +45,7 @@ const defineCyberpunkTheme = (monaco) => {
       path={filePath || `untitled.${fileName.split(".").pop() || "js"}`}
       value={code}
       onChange={handleEditorChange}
-      language="c"
+      language={currentLanguage}
       theme="cyberpunk-theme"
         beforeMount={defineCyberpunkTheme}
       options={{

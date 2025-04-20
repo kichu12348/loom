@@ -1,12 +1,49 @@
 import { useState, useEffect, useRef } from "react";
 import { open, save } from "@tauri-apps/plugin-dialog";
-import { readTextFile, writeTextFile } from "@tauri-apps/plugin-fs";
+import { readTextFile, writeTextFile, readDir, mkdir, remove, rename } from "@tauri-apps/plugin-fs";
 import { basename } from "@tauri-apps/api/path";
 import "./App.css";
 
 import TitleBar from "./components/TitleBar";
 import CodeEditor from "./components/CodeEditor";
 import AnimationStyles from "./components/AnimationStyles";
+import Sidebar from "./components/Sidebar";
+import TabsBar from "./components/TabsBar";
+
+const languageMap = {
+  js: "javascript",
+  ts: "typescript",
+  py: "python",
+  go: "go",
+  rb: "ruby",
+  java: "java",
+  php: "php",
+  html: "html",
+  css: "css",
+  json: "json",
+  md: "markdown",
+  rs: "rust",
+  c: "c",
+  cpp: "cpp",
+  swift: "swift",
+  kotlin: "kotlin",
+  sql: "sql",
+  xml: "xml",
+  txt: "plaintext",
+  yml: "yaml",
+  yaml: "yaml",
+  sh: "bash",
+  bat: "batch",
+  ps: "powershell",
+  log: "plaintext",
+  csv: "csv",
+  ini: "ini",
+  conf: "ini",
+  toml: "toml",
+  dockerfile: "dockerfile",
+};
+
+
 
 const CyberpunkDecorations = () => {
   return (
@@ -34,11 +71,37 @@ export default function App() {
   const [code, setCode] = useState("// welcome to Loom!");
   const [filePath, setFilePath] = useState(null);
   const [fileName, setFileName] = useState("Untitled");
+  const [sidebarExpanded, setSidebarExpanded] = useState(true);
+  const [currentLanguage, setCurrentLanguage] = useState("javascript");
+  const [isImageOrVideo, setIsImageOrVideo] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(0);
   const editorContainerRef = useRef(null);
 
-  function handleEditorChange(value, _) {
+  const [currentRoot, setCurrentRoot] = useState(() => {
+    const saved = window.localStorage.getItem('lastOpenedDir');
+    return saved || null;
+  });
+  const [files, setFiles] = useState([]);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  // Tabs state
+  const [tabs, setTabs] = useState([]); // {filePath, name, language, code}
+  const [activeTab, setActiveTab] = useState(null); // filePath of active tab
+
+  function handleEditorChange(value) {
     setCode(value);
   }
+
+  // async function handleEditorSave(filePath) {
+  //   console.log("Saving file to:", filePath);
+  //   try {
+  //     await writeTextFile(filePath.toString(), code);
+      
+  //   } catch (err) {
+  //     console.error("Error saving file:", err);
+  //   }
+
+  // }
 
   useEffect(() => {
     function handleResize() {
@@ -46,7 +109,6 @@ export default function App() {
         editorContainerRef.current.style.height = `${
           window.innerHeight - 40
         }px`;
-        editorContainerRef.current.style.width = `${window.innerWidth}px`;
       }
     }
 
@@ -55,17 +117,32 @@ export default function App() {
 
     window.addEventListener("resize", handleResize);
 
+    // This will observe any size changes and force editor resize
     const resizeObserver = new ResizeObserver(() => {
-      //deebooging
+      // Force editor to resize when container changes size
+      window.dispatchEvent(new Event('resize'));
     });
 
-    resizeObserver.observe(document.documentElement);
+    if (editorContainerRef.current) {
+      resizeObserver.observe(editorContainerRef.current);
+    }
 
     return () => {
       window.removeEventListener("resize", handleResize);
-      resizeObserver.disconnect();
+      if (resizeObserver) {
+        resizeObserver.disconnect();
+      }
     };
   }, []);
+
+  useEffect(() => {
+    async function fetchFiles() {
+      if (!currentRoot) return;
+      const entries = await readDir(currentRoot, { recursive: false });
+      setFiles(entries);
+    }
+    fetchFiles();
+  }, [currentRoot, refreshKey]);
 
   async function handleOpenFile() {
     try {
@@ -100,6 +177,7 @@ export default function App() {
       console.log("Error opening file:", err);
     }
   }
+
 
   async function handleSaveFile() {
     try {
@@ -173,6 +251,90 @@ export default function App() {
     }
   }
 
+  async function handleOpenDir() {
+    const dir = await open({ directory: true });
+    if (dir) {
+      setCurrentRoot(dir);
+      setFiles([]); // Clear previous files
+      setRefreshKey((k) => k + 1);
+      window.localStorage.setItem('lastOpenedDir', dir);
+    }
+  }
+
+  function refreshFiles() {
+    setRefreshKey((k) => k + 1);
+  }
+
+  // Add a handler to open files from the sidebar
+  async function handleSidebarFileClick(path) {
+    // Check if tab already exists
+    const existingTab = tabs.find((tab) => tab.filePath === path);
+    if (existingTab) {
+      setActiveTab(existingTab.filePath);
+      setCode(existingTab.code);
+      setFilePath(existingTab.filePath);
+      setFileName(existingTab.name);
+      setCurrentLanguage(existingTab.language || "javascript");
+      setIsImageOrVideo(false);
+      setActiveIndex(tabs.findIndex((t) => t.filePath === existingTab.filePath));
+      return;
+    }
+    try {
+      const contents = await readTextFile(path);
+      const name = path.split(/[\\/]/).pop();
+      const language = languageMap[name.split(".").pop()] || "plaintext";
+      const newTab = {
+        filePath: path,
+        name,
+        language,
+        code: contents,
+      };
+      setTabs((prev) => [...prev, newTab]);
+      setActiveTab(path);
+      setCode(contents);
+      setFilePath(path);
+      setFileName(name);
+      setCurrentLanguage(language);
+      setIsImageOrVideo(false);
+      setActiveIndex(tabs.length); // Set the new tab as active
+    } catch (err) {
+      console.error("Error opening file from sidebar:", err);
+    }
+  }
+
+  // Handle tab change
+  function handleTabChange(tab) {
+    if (!tab) return;
+    setActiveTab(tab.filePath);
+    setCode(tab.code);
+    setFilePath(tab.filePath);
+    setFileName(tab.name);
+    setCurrentLanguage(tab.language || "javascript");
+    setIsImageOrVideo(false);
+    setActiveIndex(tabs.findIndex((t) => t.filePath === tab.filePath));
+  }
+
+  // Handle tab close
+  function handleTabClose(tab) {
+    setTabs((prev) => prev.filter((t) => t.filePath !== tab.filePath));
+    if (activeTab === tab.filePath) {
+      // Move to previous tab or first tab
+      const idx = tabs.findIndex((t) => t.filePath === tab.filePath);
+      const newTabs = tabs.filter((t) => t.filePath !== tab.filePath);
+      if (newTabs.length > 0) {
+        const newActive = newTabs[idx === 0 ? 0 : idx - 1];
+        handleTabChange(newActive);
+      } else {
+        setActiveTab(null);
+        setCode("");
+        setFilePath(null);
+        setFileName("Untitled");
+        setCurrentLanguage("javascript");
+        setIsImageOrVideo(false);
+      }
+    }
+  }
+
   return (
     <div
       style={{
@@ -181,44 +343,69 @@ export default function App() {
         display: "flex",
         flexDirection: "column",
         background: "transparent",
-        fontFamily:
-          "'Synth Midnight', 'Orbitron', 'JetBrains Mono', sans-serif",
+        fontFamily: "'Synth Midnight', 'Orbitron', 'JetBrains Mono', sans-serif",
         color: "#e0e0ff",
         margin: 0,
         padding: 0,
         overflow: "hidden",
       }}
     >
-      {/* Add global animation styles */}
-      <AnimationStyles />
-
-      {/* Title Bar Component */}
+      {/* Title Bar always on top */}
       <TitleBar
         fileName={fileName}
         filePath={filePath}
         handleOpenFile={handleOpenFile}
         handleSaveFile={handleSaveFile}
         handleSaveFileAs={handleSaveFileAs}
+        handleOpenDir={handleOpenDir}
       />
-
-      <div
-        ref={editorContainerRef}
-        style={{
-          flex: 1,
-          position: "relative",
-          overflow: "hidden",
-          border: "1px solid #12151f",
-          boxShadow: "inset 0 0 30px rgba(5, 217, 232, 0.1)",
-        }}
-      >
-        <CyberpunkDecorations />
-
-        <CodeEditor
-          filePath={filePath}
-          fileName={fileName}
-          code={code}
-          handleEditorChange={handleEditorChange}
+      {/* Main content: sidebar + (tabs + editor) */}
+      <div style={{ flex: 1, display: "flex", flexDirection: "row", minWidth: 0, minHeight: 0 }}>
+        <Sidebar 
+          onFileClick={handleSidebarFileClick} 
+          onToggleExpand={(expanded) => setSidebarExpanded(expanded)}
+          initialExpanded={sidebarExpanded}
+          setCurrentLanguage={setCurrentLanguage}
+          setIsImageOrVideo={setIsImageOrVideo}
+          currentRoot={currentRoot}
+          files={files}
+          refreshFiles={refreshFiles}
+          handleOpenDir={handleOpenDir}
         />
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
+          {/* TabsBar is now inside the editor container, above the editor */}
+          <TabsBar
+            initial={tabs}
+            onTabChange={handleTabChange}
+            onTabClose={handleTabClose}
+            tabs={tabs}
+            setTabs={setTabs}
+            activeIndex={activeIndex}
+            setActiveIndex={setActiveIndex}
+          />
+          <AnimationStyles />
+          <div
+            ref={editorContainerRef}
+            style={{
+              flex: 1,
+              position: "relative",
+              overflow: "hidden",
+              border: "1px solid #12151f",
+              boxShadow: "inset 0 0 30px rgba(5, 217, 232, 0.1)",
+            }}
+          >
+            <CyberpunkDecorations />
+            <CodeEditor
+              filePath={filePath}
+              fileName={fileName}
+              code={code}
+              handleEditorChange={handleEditorChange}
+              currentLanguage={currentLanguage}
+              isImageOrVideo={isImageOrVideo}
+              handlePermSave={handleSaveFile}
+            />
+          </div>
+        </div>
       </div>
     </div>
   );
