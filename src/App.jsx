@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { open, save } from "@tauri-apps/plugin-dialog";
-import { readTextFile, writeTextFile, readDir, mkdir, remove, rename } from "@tauri-apps/plugin-fs";
+import { readTextFile, writeTextFile, readDir } from "@tauri-apps/plugin-fs";
 import { basename } from "@tauri-apps/api/path";
 import "./App.css";
 
@@ -69,7 +69,7 @@ const CyberpunkDecorations = () => {
 };
 
 export default function App() {
-  const [code, setCode] = useState("// welcome to Loom!");
+  const [code, setCode] = useState(null);
   const [filePath, setFilePath] = useState(null);
   const [fileName, setFileName] = useState("Untitled");
   const [sidebarExpanded, setSidebarExpanded] = useState(true);
@@ -216,6 +216,7 @@ export default function App() {
 
 
   const handleSaveFile = useCallback(async () => {
+    if (!code) return;
     try {
       let path_to_save = filePath;
       if (!path_to_save) {
@@ -464,7 +465,8 @@ export default function App() {
           {/* Terminal component */}
           <Terminal 
             show={showTerminal} 
-            onResize={handleTerminalResize} 
+            onResize={handleTerminalResize}
+            onClose={toggleTerminal}
           />
         </div>
       </div>
